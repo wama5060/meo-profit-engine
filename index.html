@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MEO Profit Engine</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#F0F4F8;color:#1F2937}
+.hero{background:linear-gradient(135deg,#1E3A5F 0%,#0F5132 100%);padding:18px 24px}
+.hero h1{font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.5px}
+.hero p{font-size:11px;color:#93C5FD;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.strip{background:#0F5132;padding:8px 24px;display:flex;gap:32px;flex-wrap:wrap}
+.strip span{color:#fff;font-size:13px}.strip b{color:#6EE7B7}
+.tabs{background:#fff;border-bottom:1px solid #E5E7EB;padding:8px 24px;display:flex;gap:6px;position:sticky;top:0;z-index:10}
+.tab{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s}
+.tab.active{background:#1E3A5F;color:#fff}
+.tab:not(.active){background:#fff;color:#374151}
+.tab:not(.active):hover{background:#F9FAFB}
+.main{max-width:1100px;margin:0 auto;padding:24px}
+.panel{display:none}.panel.active{display:block}
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.07);padding:20px;margin-bottom:16px}
+.section-title{font-size:18px;font-weight:700;color:#1E3A5F;margin-bottom:4px}
+.sub{font-size:13px;color:#6B7280;margin-bottom:20px}
+label{display:block;font-size:12px;color:#6B7280;font-weight:500;margin-bottom:3px}
+input[type=number]{border:2px solid #FCD34D;background:#FFFBEB;border-radius:7px;padding:7px 10px;width:100%;font-size:13px;outline:none;transition:border-color .2s}
+input[type=number]:focus{border-color:#1E3A5F}
+.grid2{display:grid;grid-template-columns:220px 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+table{width:100%;border-collapse:collapse}
+th{background:#1E3A5F;color:#fff;padding:10px 14px;text-align:left;font-size:12px;font-weight:600}
+td{padding:9px 14px;font-size:13px;border-bottom:1px solid #F3F4F6}
+tr:hover td{background:#FAFAFA}
+.bold-row td{background:#EFF6FF;font-weight:700}
+.total-row td{background:#1E3A5F;color:#fff;font-weight:700}
+.pos{color:#065F46;font-weight:700}.neg{color:#991B1B;font-weight:700}.neu{color:#1E3A5F;font-weight:700}
+.badge-g{background:#D1FAE5;color:#065F46;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-r{background:#FEE2E2;color:#991B1B;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-y{background:#FEF3C7;color:#92400E;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.metric{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.metric .lbl{font-size:12px;color:#6B7280;margin-bottom:4px}
+.metric .val{font-size:22px;font-weight:800}
+.ltv-box{border-left:4px solid #0F5132;padding:16px;background:#F0FDF4;border-radius:8px;margin-bottom:16px}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;cursor:pointer;border-bottom:1px solid #F3F4F6}
+.check-item:last-child{border-bottom:none}
+.checkbox{width:20px;height:20px;min-width:20px;border-radius:4px;border:2px solid #D1D5DB;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s}
+.checkbox.done{background:#10B981;border-color:#10B981}
+.check-item.done span{text-decoration:line-through;color:#9CA3AF}
+.progress-bar{background:#E5E7EB;border-radius:99px;height:8px;overflow:hidden}
+.progress-fill{background:#10B981;height:8px;border-radius:99px;transition:width .4s}
+.sec-header{background:#F8FAFC;border-bottom:1px solid #E5E7EB;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0}
+.scenario-btn{padding:8px 20px;border-radius:8px;border:2px solid;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s}
+.insight{background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:16px}
+.insight b{color:#065F46}.insight p{font-size:13px;color:#047857;margin-top:4px}
+.footer{text-align:center;padding:24px;color:#9CA3AF;font-size:12px}
+.header-row{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+.header-row .right{text-align:right;color:#fff}
+.header-row .right p{font-size:12px;color:#93C5FD}
+.kpi-scorecard{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="header-row">
+    <div><h1>MEO Profit Engine</h1><p>Multi-Channel E-Commerce Operating System</p></div>
+    <div class="right"><b>Built from MEO Portfolio Research</b><p>Amazon · Walmart · Shopify · Unit Economics</p></div>
+  </div>
+</div>
+<div class="strip">
+  <span><b>Goal:</b> Contribution Margin &gt;20%</span>
+  <span><b>Path:</b> Amazon → Walmart → Shopify</span>
+  <span><b>Key Ratio:</b> LTV:CAC &gt;3:1</span>
+  <span><b>Rule #1:</b> Margin first. Scale second.</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('calc',this)">💰 Profit Calculator</button>
+  <button class="tab" onclick="showTab('proj',this)">📈 12-Month Projector</button>
+  <button class="tab" onclick="showTab('kpi',this)">📊 KPI Dashboard</button>
+  <button class="tab" onclick="showTab('list',this)">✅ Launch Checklist</button>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════ CALCULATOR ═══════════════════════════════ -->
+<div id="calc" class="panel active">
+  <div class="section-title">Unit Economics Calculator</div>
+  <div class="sub">Enter your product numbers. See real profit per order across all 3 channels.</div>
+
+  <div class="grid2">
+    <!-- Inputs -->
+    <div>
+      <div class="card">
+        <div style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Pricing</div>
+        <label>Amazon Price ($)</label><input type="number" id="amzPrice" value="29.99" step="0.01" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>Shopify Price ($)</label><input type="number" id="shopPrice" value="65.00" step="0.01" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>Landed COGS ($)</label><input type="number" id="cogs" value="8.50" step="0.01" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>Inbound / Prep ($)</label><input type="number" id="inbound" value="1.10" step="0.01" oninput="calc()">
+      </div>
+      <div class="card" style="margin-top:0">
+        <div style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Amazon Fees</div>
+        <label>Referral Fee (%)</label><input type="number" id="amzRef" value="15" step="0.1" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>FBA Fee ($)</label><input type="number" id="fbaFee" value="4.55" step="0.01" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>Storage / unit ($)</label><input type="number" id="storage" value="0.10" step="0.01" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>Ad Spend / order ($)</label><input type="number" id="amzAds" value="3.00" step="0.01" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>Return Rate (%)</label><input type="number" id="returnRate" value="5" step="0.1" oninput="calc()">
+      </div>
+      <div class="card" style="margin-top:0">
+        <div style="font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Shopify / DTC</div>
+        <label>Payment Fee (%)</label><input type="number" id="shopFeeP" value="2.9" step="0.01" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>Fixed Fee ($)</label><input type="number" id="shopFeeF" value="0.30" step="0.01" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>Fulfillment ($)</label><input type="number" id="shopShip" value="7.00" step="0.01" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>CAC / ads ($)</label><input type="number" id="cac" value="18.00" step="0.01" oninput="calc()">
+        <div style="height:8px"></div>
+        <label>Repeat Purchase Freq.</label><input type="number" id="repeatFreq" value="2.4" step="0.1" oninput="calc()">
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Line Item</th><th style="text-align:right">Amazon FBA</th><th style="text-align:right">Walmart</th><th style="text-align:right">Shopify DTC</th></tr></thead>
+          <tbody id="calcTable"></tbody>
+        </table>
+      </div>
+
+      <div class="ltv-box" id="ltvBox"></div>
+
+      <div class="card">
+        <div style="font-weight:700;color:#374151;margin-bottom:12px">Monthly Summary at Your Order Volumes</div>
+        <div class="grid3" style="margin-bottom:12px">
+          <div><label>Amazon Orders/mo</label><input type="number" id="amzOrders" value="300" oninput="calc()"></div>
+          <div><label>Walmart Orders/mo</label><input type="number" id="walmOrders" value="80" oninput="calc()"></div>
+          <div><label>Shopify Orders/mo</label><input type="number" id="shopOrders" value="40" oninput="calc()"></div>
+        </div>
+        <div class="grid3" id="monthlySummary" style="padding-top:12px;border-top:2px solid #E5E7EB"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PROJECTIONS ══════════════════════════════ -->
+<div id="proj" class="panel">
+  <div class="section-title">12-Month Scenario Projector</div>
+  <div class="sub">Based on real MEO benchmark data. Select a scenario to see your path to profitability.</div>
+
+  <div style="display:flex;gap:10px;margin-bottom:20px">
+    <button class="scenario-btn" id="btn-conservative" onclick="setScenario('conservative')" style="border-color:#F59E0B;background:#F59E0B;color:#fff">Conservative</button>
+    <button class="scenario-btn" id="btn-realistic" onclick="setScenario('realistic')" style="border-color:#10B981;color:#10B981;background:#fff">Realistic</button>
+    <button class="scenario-btn" id="btn-aggressive" onclick="setScenario('aggressive')" style="border-color:#3B82F6;color:#3B82F6;background:#fff">Aggressive</button>
+  </div>
+
+  <div class="grid4" id="scenarioStats" style="margin-bottom:20px"></div>
+
+  <div class="card" style="margin-bottom:16px">
+    <canvas id="projChart" style="max-height:300px"></canvas>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+    <table id="scenarioTable">
+      <thead><tr>
+        <th>Scenario</th><th style="text-align:right">Annual Orders</th><th style="text-align:right">Year-1 Revenue</th>
+        <th style="text-align:right">Gross Profit</th><th style="text-align:right">Contribution</th>
+        <th style="text-align:right">Operating Profit</th><th style="text-align:right">Year-end Cash</th><th>Break-even</th>
+      </tr></thead>
+      <tbody id="scenarioTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="insight">
+    <b>Key Insight from the MEO Portfolio Research</b>
+    <p>Same operator. Different portfolio discipline. The gap between Conservative and Aggressive isn't luck — it's how early you validate your product, how tight your unit economics are, and how fast you cross-list winners without adding overhead.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ KPI TRACKER ══════════════════════════════ -->
+<div id="kpi" class="panel">
+  <div class="section-title">KPI Dashboard</div>
+  <div class="sub">Enter your numbers weekly. If any go red, fix it before adding more channels or ad spend.</div>
+
+  <div class="card" id="kpiScorecard" style="display:none;margin-bottom:16px">
+    <div class="kpi-scorecard">
+      <div><div style="font-size:12px;color:#6B7280">KPIs Entered</div><div class="val neu" id="kpiEntered" style="font-size:22px;font-weight:800"></div></div>
+      <div><div style="font-size:12px;color:#6B7280">Passing Targets</div><div class="val" id="kpiPassing" style="font-size:22px;font-weight:800"></div></div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:#6B7280;margin-bottom:6px">Health Score</div>
+        <div class="progress-bar"><div class="progress-fill" id="healthBar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead><tr><th>KPI</th><th>Category</th><th>Target</th><th style="text-align:center">Your Number</th><th style="text-align:center">Status</th><th>Why It Matters</th></tr></thead>
+      <tbody id="kpiTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ CHECKLIST ════════════════════════════════ -->
+<div id="list" class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+    <div>
+      <div class="section-title">MEO Launch Checklist</div>
+      <div class="sub" style="margin-bottom:0">Complete in order. Don't skip phases. Speed comes from doing each step right once.</div>
+    </div>
+    <div class="card" style="text-align:center;min-width:120px;padding:12px 20px">
+      <div class="pos" id="doneCount" style="font-size:32px;font-weight:800">0</div>
+      <div style="font-size:12px;color:#9CA3AF" id="totalCount">of 29 done</div>
+      <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" id="listBar" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div id="checklistWrap"></div>
+</div>
+
+</div><!-- /main -->
+
+<div class="footer">MEO Profit Engine · Built from the MEO Portfolio E-Commerce Operating Model Research · All calculations use live inputs</div>
+
+<script>
+// ═══════════════════════ TAB NAVIGATION ════════════════════════
+function showTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════ HELPERS ═══════════════════════════════
+const g = id => parseFloat(document.getElementById(id).value)||0;
+const fmt = (n,pre='$') => isNaN(n)?'—':pre+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtInt = n => '$'+Math.round(n).toLocaleString('en-US');
+const fmtPct = n => (n*100).toFixed(1)+'%';
+
+// ═══════════════════════ CALCULATOR ════════════════════════════
+function calc() {
+  const amzPrice=g('amzPrice'), shopPrice=g('shopPrice'), cogs=g('cogs'), inbound=g('inbound');
+  const amzRef=g('amzRef'), fbaFee=g('fbaFee'), storage=g('storage'), amzAds=g('amzAds');
+  const returnRate=g('returnRate'), shopFeeP=g('shopFeeP'), shopFeeF=g('shopFeeF');
+  const shopShip=g('shopShip'), cac=g('cac'), repeatFreq=g('repeatFreq');
+
+  // Amazon
+  const aRev=amzPrice, aGP=aRev-cogs-inbound, aRef=aRev*(amzRef/100), aRet=aRev*(returnRate/100);
+  const aContrib=aGP-aRef-fbaFee-storage-aRet-amzAds;
+
+  // Walmart (95% of Amazon price, 15% ref, $3.50 fulfil, $0.10 storage, $1.50 ads)
+  const wRev=amzPrice*0.95, wGP=wRev-cogs-inbound, wRef=wRev*0.15, wRet=wRev*(returnRate/100);
+  const wContrib=wGP-wRef-3.50-0.10-wRet-1.50;
+
+  // Shopify
+  const sRev=shopPrice, sGP=sRev-cogs-inbound, sFee=sRev*(shopFeeP/100)+shopFeeF, sRet=sRev*(returnRate/100);
+  const sContrib=sGP-sFee-shopShip-sRet-cac;
+  const sLTV=(sGP-sFee-shopShip-sRet)*repeatFreq;
+  const ltvcac=sLTV/Math.max(0.01,cac);
+
+  const row = (label,a,w,s,bold,total) => {
+    const cls = total?'total-row':bold?'bold-row':'';
+    const color=(val,isTot)=>!isTot&&val<0?'color:#EF4444;':'';
+    return `<tr class="${cls}">
+      <td style="font-weight:${bold||total?700:400}">${label}</td>
+      <td style="text-align:right;${color(a,total)}">${fmt(a)}</td>
+      <td style="text-align:right;${color(w,total)}">${fmt(w)}</td>
+      <td style="text-align:right;${color(s,total)}">${fmt(s)}</td>
+    </tr>`;
+  };
+
+  const pctRow = (label,a,w,s,thresh) => `<tr class="bold-row">
+    <td style="font-weight:700">${label}</td>
+    <td style="text-align:right;font-weight:700;color:${a>=thresh?'#065F46':'#991B1B'}">${fmtPct(a)}</td>
+    <td style="text-align:right;font-weight:700;color:${w>=thresh?'#065F46':'#991B1B'}">${fmtPct(w)}</td>
+    <td style="text-align:right;font-weight:700;color:${s>=thresh?'#065F46':'#991B1B'}">${fmtPct(s)}</td>
+  </tr>`;
+
+  document.getElementById('calcTable').innerHTML =
+    row('Selling Price',aRev,wRev,sRev,true)+
+    row('Less: Landed COGS',-cogs,-cogs,-cogs)+
+    row('Less: Inbound/Prep',-inbound,-inbound,-inbound)+
+    row('= Gross Profit',aGP,wGP,sGP,true)+
+    pctRow('Gross Margin %',aGP/aRev,wGP/wRev,sGP/sRev,0.5)+
+    row('Less: Platform Fees',-aRef,-wRef,-(sRev*(shopFeeP/100)+shopFeeF))+
+    row('Less: Fulfillment',-fbaFee,-3.50,-shopShip)+
+    row('Less: Storage',-storage,-0.10,0)+
+    row('Less: Returns',-aRet,-wRet,-sRet)+
+    row('Less: Ads / CAC',-amzAds,-1.50,-cac)+
+    row('= CONTRIBUTION / ORDER',aContrib,wContrib,sContrib,false,true)+
+    pctRow('Contribution Margin %',aContrib/aRev,wContrib/wRev,sContrib/sRev,0.20);
+
+  const healthy = ltvcac>=3;
+  document.getElementById('ltvBox').innerHTML = `
+    <div style="font-weight:700;color:#374151;margin-bottom:10px">Shopify / DTC Lifetime Value</div>
+    <div class="grid3">
+      <div><div style="font-size:12px;color:#6B7280">Revenue LTV</div><div class="neu" style="font-size:18px;font-weight:700">${fmt(shopPrice*repeatFreq)}</div></div>
+      <div><div style="font-size:12px;color:#6B7280">Contribution LTV</div><div class="neu" style="font-size:18px;font-weight:700">${fmt(sLTV)}</div></div>
+      <div><div style="font-size:12px;color:#6B7280">LTV:CAC Ratio</div>
+        <div style="font-size:18px;font-weight:700;color:${healthy?'#065F46':'#991B1B'}">${ltvcac.toFixed(2)}x
+          <span class="${healthy?'badge-g':'badge-r'}">${healthy?'✓ Healthy':'⚠ Below 3x'}</span>
+        </div>
+      </div>
+    </div>`;
+
+  // Monthly
+  const amzO=g('amzOrders'), wO=g('walmOrders'), sO=g('shopOrders');
+  const totalRev=amzO*aRev+wO*wRev+sO*sRev;
+  const totalC=amzO*aContrib+wO*wContrib+sO*sContrib;
+  const aov=totalRev/Math.max(1,amzO+wO+sO);
+  document.getElementById('monthlySummary').innerHTML = `
+    <div><div style="font-size:12px;color:#6B7280">Total Monthly Revenue</div><div class="neu" style="font-size:20px;font-weight:700">${fmtInt(totalRev)}</div></div>
+    <div><div style="font-size:12px;color:#6B7280">Total Contribution</div><div class="${totalC>=0?'pos':'neg'}" style="font-size:20px;font-weight:700">${fmtInt(totalC)}</div></div>
+    <div><div style="font-size:12px;color:#6B7280">Blended AOV</div><div class="neu" style="font-size:20px;font-weight:700">${fmt(aov)}</div></div>`;
+}
+calc();
+
+// ═══════════════════════ PROJECTIONS ═══════════════════════════
+const SCENARIOS = {
+  conservative:{label:'Conservative',color:'#F59E0B',aov:31,gm:.54,cm:.11,opex:1500,startup:12000,startOrders:200,growth:.10,annualOrders:6129,annualRev:190000,annualGP:102600,annualContrib:20900,annualOpex:18000,annualProfit:2900,yearEndCash:-9100,breakeven:'Beyond Mo 12'},
+  realistic:{label:'Realistic',color:'#10B981',aov:34,gm:.56,cm:.165,opex:1900,startup:15000,startOrders:350,growth:.15,annualOrders:11294,annualRev:384000,annualGP:215040,annualContrib:63360,annualOpex:22800,annualProfit:40560,yearEndCash:25560,breakeven:'Month 8'},
+  aggressive:{label:'Aggressive',color:'#3B82F6',aov:38,gm:.58,cm:.205,opex:2800,startup:25000,startOrders:500,growth:.20,annualOrders:18316,annualRev:696000,annualGP:403680,annualContrib:142680,annualOpex:33600,annualProfit:109080,yearEndCash:84080,breakeven:'Month 6'}
+};
+const MONTHS=['Mo 1','Mo 2','Mo 3','Mo 4','Mo 5','Mo 6','Mo 7','Mo 8','Mo 9','Mo 10','Mo 11','Mo 12'];
+let activeScenario='conservative', projChart=null;
+
+function getMonthlyData(key) {
+  const sc=SCENARIOS[key];
+  const revenue=[],contrib=[],cash=[];
+  let ord=sc.startOrders, cumCash=-sc.startup;
+  for(let i=0;i<12;i++){
+    const rev=ord*sc.aov, con=rev*sc.cm, op=con-sc.opex;
+    if(i===2) cumCash-=sc.startup*.2;
+    if(i===5) cumCash-=sc.startup*.25;
+    cumCash+=op;
+    revenue.push(Math.round(rev)); contrib.push(Math.round(con)); cash.push(Math.round(cumCash));
+    ord*=(1+sc.growth);
+  }
+  return {revenue,contrib,cash};
+}
+
+function setScenario(key) {
+  activeScenario=key;
+  Object.keys(SCENARIOS).forEach(k=>{
+    const btn=document.getElementById('btn-'+k), sc=SCENARIOS[k];
+    if(k===key){btn.style.background=sc.color;btn.style.color='#fff';btn.style.borderColor=sc.color;}
+    else{btn.style.background='#fff';btn.style.color=sc.color;btn.style.borderColor=sc.color;}
+  });
+  const sc=SCENARIOS[key];
+  document.getElementById('scenarioStats').innerHTML=[
+    ['Blended AOV','$'+sc.aov,'neu'],
+    ['Contribution Margin',fmtPct(sc.cm),sc.cm>=.2?'pos':'badge-y'],
+    ['Break-even',sc.breakeven,sc.yearEndCash>=0?'pos':'neg'],
+    ['Year-end Cash',fmtInt(sc.yearEndCash),sc.yearEndCash>=0?'pos':'neg']
+  ].map(([l,v,cls])=>`<div class="metric"><div class="lbl">${l}</div><div class="val ${cls}" style="font-size:22px;font-weight:800">${v}</div></div>`).join('');
+
+  // Table
+  document.getElementById('scenarioTableBody').innerHTML=Object.entries(SCENARIOS).map(([k,s])=>
+    `<tr style="background:${k===key?'#EFF6FF':''};font-weight:${k===key?700:400};cursor:pointer" onclick="setScenario('${k}')">
+      <td style="color:${s.color};font-weight:700">${s.label}</td>
+      <td style="text-align:right">${s.annualOrders.toLocaleString()}</td>
+      <td style="text-align:right">${fmtInt(s.annualRev)}</td>
+      <td style="text-align:right">${fmtInt(s.annualGP)}</td>
+      <td style="text-align:right">${fmtInt(s.annualContrib)}</td>
+      <td style="text-align:right;color:${s.annualProfit>0?'#065F46':'#991B1B'};font-weight:700">${fmtInt(s.annualProfit)}</td>
+      <td style="text-align:right;color:${s.yearEndCash>0?'#065F46':'#991B1B'};font-weight:700">${fmtInt(s.yearEndCash)}</td>
+      <td><span class="${s.yearEndCash>0?'badge-g':'badge-r'}">${s.breakeven}</span></td>
+    </tr>`
+  ).join('');
+
+  // Chart
+  const d=getMonthlyData(key);
+  if(projChart) projChart.destroy();
+  projChart=new Chart(document.getElementById('projChart'),{
+    type:'bar',
+    data:{
+      labels:MONTHS,
+      datasets:[
+        {label:'Monthly Revenue',data:d.revenue,backgroundColor:'#BFDBFE',yAxisID:'y'},
+        {label:'Contribution $',data:d.contrib,backgroundColor:sc.color,yAxisID:'y'},
+        {label:'Cumulative Cash',data:d.cash,type:'line',borderColor:'#1E3A5F',backgroundColor:'transparent',borderWidth:2.5,pointRadius:4,yAxisID:'y'}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
+      scales:{y:{beginAtZero:false,ticks:{callback:v=>'$'+Math.round(v/1000)+'k'}}}}
+  });
+}
+setScenario('conservative');
+
+// ═══════════════════════ KPI TRACKER ═══════════════════════════
+const KPIS=[
+  {k:'cm',label:'Contribution Margin %',target:'>20%',unit:'%',check:v=>v>20,cat:'Economics',why:'Most important MEO scaling metric'},
+  {k:'gm',label:'Gross Margin %',target:'>50%',unit:'%',check:v=>v>50,cat:'Economics',why:'Product health before platform costs'},
+  {k:'ltvcac',label:'LTV:CAC Ratio (Shopify)',target:'>3.0x',unit:'x',check:v=>v>3,cat:'Retention',why:'Governs how fast DTC can scale profitably'},
+  {k:'cac2',label:'Customer Acq. Cost',target:'<$20',unit:'$',check:v=>v<20&&v>0,cat:'Sales Efficiency',why:'Keep paid growth honest'},
+  {k:'conv',label:'Amazon Conv. Rate %',target:'>12%',unit:'%',check:v=>v>12,cat:'Conversion',why:'Listing quality + offer strength'},
+  {k:'repeat',label:'Repeat Purchase Rate %',target:'>25%',unit:'%',check:v=>v>25,cat:'Retention',why:'DTC compounding potential'},
+  {k:'weeks',label:'Inventory Weeks of Cover',target:'6-10 wks',unit:'wks',check:v=>v>=6&&v<=12,cat:'Inventory',why:'Avoid stockout or capital lock-up'},
+  {k:'sellthru',label:'Sell-Through Rate %',target:'>80%/mo',unit:'%',check:v=>v>80,cat:'Inventory',why:'Demand vs inventory health'},
+  {k:'ret2',label:'Return Rate %',target:'<8%',unit:'%',check:v=>v<8&&v>0,cat:'Operations',why:'Erodes margin fast above 10%'},
+  {k:'otd',label:'On-Time Delivery %',target:'>97%',unit:'%',check:v=>v>97,cat:'Operations',why:'Account health on marketplaces'},
+  {k:'opprof',label:'Operating Profit ($/mo)',target:'>$0',unit:'$',check:v=>v>0,cat:'Cash',why:'Are you profitable yet?'},
+  {k:'cash',label:'Cash Position ($)',target:'>Startup Cost',unit:'$',check:v=>v>0,cat:'Cash',why:'Are you actually financeable to grow?'}
+];
+
+document.getElementById('kpiTable').innerHTML=KPIS.map(kpi=>`
+  <tr id="kpirow-${kpi.k}">
+    <td class="font-medium">${kpi.label}</td>
+    <td><span class="badge-y">${kpi.cat}</span></td>
+    <td style="font-family:monospace;font-size:12px">${kpi.target}</td>
+    <td style="text-align:center">
+      <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+        ${kpi.unit==='$'?'<span style="color:#9CA3AF;font-size:12px">$</span>':''}
+        <input type="number" placeholder="—" id="kpi-${kpi.k}" oninput="updateKPI()" style="border:2px solid #FCD34D;background:#FFFBEB;border-radius:6px;padding:5px 8px;width:85px;font-size:13px;text-align:center;outline:none">
+        ${kpi.unit!=='$'?`<span style="color:#9CA3AF;font-size:12px">${kpi.unit}</span>`:''}
+      </div>
+    </td>
+    <td style="text-align:center" id="kpistatus-${kpi.k}"><span style="color:#D1D5DB">—</span></td>
+    <td style="font-size:12px;color:#6B7280">${kpi.why}</td>
+  </tr>`).join('');
+
+function updateKPI() {
+  let entered=0, passing=0;
+  KPIS.forEach(kpi=>{
+    const el=document.getElementById('kpi-'+kpi.k);
+    const v=parseFloat(el.value);
+    const has=el.value!=='';
+    if(has){
+      entered++;
+      const ok=kpi.check(v);
+      if(ok) passing++;
+      document.getElementById('kpistatus-'+kpi.k).innerHTML=ok?'<span class="badge-g">✓ On Track</span>':'<span class="badge-r">⚠ Fix This</span>';
+      document.getElementById('kpirow-'+kpi.k).style.background=ok?'#F0FFF4':'#FFF5F5';
+    } else {
+      document.getElementById('kpistatus-'+kpi.k).innerHTML='<span style="color:#D1D5DB">—</span>';
+      document.getElementById('kpirow-'+kpi.k).style.background='';
+    }
+  });
+  if(entered>0){
+    document.getElementById('kpiScorecard').style.display='block';
+    document.getElementById('kpiEntered').textContent=entered+'/'+KPIS.length;
+    const pEl=document.getElementById('kpiPassing');
+    pEl.textContent=passing+'/'+entered;
+    pEl.className=passing===entered?'pos':'neg';
+    const pct=Math.round((passing/Math.max(1,entered))*100);
+    document.getElementById('healthBar').style.width=pct+'%';
+    document.getElementById('healthBar').style.background=pct>=80?'#10B981':'#F59E0B';
+  } else {
+    document.getElementById('kpiScorecard').style.display='none';
+  }
+}
+
+// ═══════════════════════ CHECKLIST ═════════════════════════════
+const STEPS=[
+  {phase:'Legal & Finance',items:['Form LLC and get EIN at IRS.gov (free — takes 10 minutes online)','Open a dedicated business bank account (never mix personal + business)','Set up bookkeeping with channel tracking (QuickBooks, Wave, or Xero)','Register for sales tax in your state']},
+  {phase:'Product Research',items:['Validate demand using Helium 10 or Jungle Scout (free trials available)','Confirm 50%+ gross margin BEFORE buying inventory','Choose 3-5 standard-size, non-hazmat SKUs to start','Source from at least 2 suppliers — never depend on one','Order samples before full inventory buy']},
+  {phase:'Channel Setup',items:['Create Amazon Professional Seller account ($39.99/mo)','Enroll in Amazon Brand Registry if you have a trademark','Register on Walmart Marketplace (free — no monthly fee)','Launch Shopify Basic storefront ($29/mo)','Install inventory sync software (Sellbrite, Linnworks, or Skubana)']},
+  {phase:'Listings & Content',items:['Professional product photography (white background + lifestyle shots)','Write Amazon titles optimized for search intent (not vanity keywords)','Create A+ Content on Amazon (can increase sales up to 8%)','Optimize Walmart listing with Walmart-specific keywords','Write Shopify product descriptions focused on brand story + SEO']},
+  {phase:'Fulfillment',items:['Choose FBA vs FBM vs 3PL per SKU — not one-size-fits-all','Ship first inventory to FBA (if using Amazon fulfillment)','Set safety stock buffers (minimum 2-3 weeks cover before reorder)','Set up automatic reorder alerts in your inventory system']},
+  {phase:'Marketing',items:['Set up email capture on Shopify from day one (Klaviyo recommended)','Launch small Amazon PPC test ($10-15/day, exact match only)','Get first 15-20 reviews via follow-up email sequence','Test bundle / multipack after 50+ orders to raise AOV','Explore nano-influencer seeding after offer-market fit confirmed']},
+  {phase:'Tracking & Scale',items:['Install Google Analytics 4 on Shopify store','Track contribution margin weekly by channel (not just total revenue)','Review account health dashboards on Amazon + Walmart weekly','Add Walmart cross-listing once Amazon hit 50+ orders/month','Add 3rd channel ONLY after first two are contribution-margin positive','Consider MCF (Multichannel Fulfillment) once velocity is proven']}
+];
+const total=STEPS.reduce((a,s)=>a+s.items.length,0);
+document.getElementById('totalCount').textContent='of '+total+' done';
+const checked={};
+
+document.getElementById('checklistWrap').innerHTML=STEPS.map((sec,si)=>`
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
+    <div class="sec-header"><span style="font-weight:700;color:#374151">${sec.phase}</span><span class="badge-y" id="secbadge-${si}">0/${sec.items.length}</span></div>
+    <div style="padding:8px 16px">${sec.items.map((item,ii)=>`
+      <div class="check-item" id="ci-${si}-${ii}" onclick="toggleCheck(${si},${ii})">
+        <div class="checkbox" id="cb-${si}-${ii}"></div>
+        <span style="font-size:13px;line-height:1.5">${item}</span>
+      </div>`).join('')}
+    </div>
+  </div>`).join('');
+
+function toggleCheck(si,ii) {
+  const k=`${si}-${ii}`, done=!checked[k];
+  checked[k]=done;
+  const cb=document.getElementById('cb-'+k), ci=document.getElementById('ci-'+k);
+  if(done){cb.classList.add('done');cb.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 6l3 3 7-7" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';ci.classList.add('done');}
+  else{cb.classList.remove('done');cb.innerHTML='';ci.classList.remove('done');}
+  const doneCount=Object.values(checked).filter(Boolean).length;
+  document.getElementById('doneCount').textContent=doneCount;
+  document.getElementById('listBar').style.width=Math.round(doneCount/total*100)+'%';
+  // Section badge
+  const secDone=STEPS[si].items.filter((_,ii2)=>checked[`${si}-${ii2}`]).length;
+  const badge=document.getElementById('secbadge-'+si);
+  badge.textContent=secDone+'/'+STEPS[si].items.length;
+  badge.className=secDone===STEPS[si].items.length?'badge-g':'badge-y';
+}
+</script>
+</body>
+</html>
